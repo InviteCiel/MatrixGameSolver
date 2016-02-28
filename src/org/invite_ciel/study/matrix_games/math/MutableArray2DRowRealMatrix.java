@@ -14,6 +14,8 @@ import java.util.Arrays;
  * Created by InviteCiel on 28.02.16.
  */
 public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements MutableRealMatrix {
+    private static final long serialVersionUID = 4231301860770686298L;
+
     private Field dataField;
 
     public MutableArray2DRowRealMatrix() {
