@@ -8,7 +8,6 @@ import org.apache.commons.math3.exception.NullArgumentException;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 
 /**
  * Created by InviteCiel on 28.02.16.
@@ -53,7 +52,7 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
     }
 
     @Override
-    public void deleteRow(int del_row) {
+    public void removeRow(int del_row) {
         try {
             dataField.set(this, ArrayUtils.remove((double[][]) dataField.get(this), del_row));
         } catch (IllegalAccessException e) {
@@ -62,7 +61,7 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
     }
 
     @Override
-    public void deleteColumn(int del_col) {
+    public void removeColumn(int del_col) {
         try {
             double[][] data = (double[][])dataField.get(this);
             for (int i = 0; i < this.getRowDimension(); i++) {
@@ -71,5 +70,32 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    private void setData(double [][] data) {
+        try {
+            dataField.set(this, data);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("MutableArray2DRowRealMatrix{\n");
+        double [][] data = getData();
+
+        for (double [] raw: data) {
+            builder.append("\t");
+            for (double cell: raw) {
+                builder.append(cell);
+                builder.append("\t");
+            }
+            builder.append("\n");
+        }
+
+        builder.append("}");
+        return builder.toString();
     }
 }
