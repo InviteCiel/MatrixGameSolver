@@ -1,4 +1,4 @@
-package org.invite_ciel.study.matrix_games.math;
+package org.invite_ciel.study.matrix_games.solver.math;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.exception.DimensionMismatchException;
@@ -6,6 +6,7 @@ import org.apache.commons.math3.exception.NoDataException;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.apache.commons.math3.exception.NullArgumentException;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import java.lang.reflect.Field;
 
@@ -98,4 +99,5 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
         builder.append("}");
         return builder.toString();
     }
+
 }

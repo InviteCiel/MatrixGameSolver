@@ -1,4 +1,4 @@
-package org.invite_ciel.study.matrix_games.math;
+package org.invite_ciel.study.matrix_games.solver.math;
 
 import org.apache.commons.math3.linear.RealMatrix;
 
