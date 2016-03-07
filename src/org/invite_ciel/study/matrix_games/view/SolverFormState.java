@@ -1,4 +1,4 @@
-package org.invite_ciel.study.matrix_games;
+package org.invite_ciel.study.matrix_games.view;
 
 /**
  * Created by InviteCiel on 29.02.16.

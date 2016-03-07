@@ -1,18 +1,21 @@
-package org.invite_ciel.study.matrix_games;
+package org.invite_ciel.study.matrix_games.view;
 
-import org.invite_ciel.study.matrix_games.math.MutableArray2DRowRealMatrix;
-import org.invite_ciel.study.matrix_games.math.MutableRealMatrix;
+import org.invite_ciel.study.matrix_games.solver.math.MutableArray2DRowRealMatrix;
+import org.invite_ciel.study.matrix_games.solver.math.MutableRealMatrix;
+import org.invite_ciel.study.matrix_games.solver.model.solution.MatrixGameSolution;
+import org.invite_ciel.study.matrix_games.solver.model.solution.MixedStrategyMatrixGameSolution;
+import org.invite_ciel.study.matrix_games.solver.model.solution.PureStrategyMatrixGameSolution;
 import org.invite_ciel.study.matrix_games.solver.Solver;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import java.awt.*;
-import java.awt.geom.Arc2D;
 import java.util.ResourceBundle;
 
 /**
@@ -37,8 +40,9 @@ public class SolverForm extends JFrame {
     private JTextField mixedStrategiesPField;
     private JTextField mixedStrategiesQField;
     private JTextField mixedStrategiesGammaField;
+    @SuppressWarnings("FieldCanBeLocal") //May be used to determine current state of SolverForm
     private SolverFormState state;
-    private Solver solver;
+    private DefaultTableCellRenderer firstColumnRenderer;
 
     public SolverForm() {
         super(labels.getString("appLabel"));
@@ -59,12 +63,39 @@ public class SolverForm extends JFrame {
     }
 
     private void solveMatrixGame() {
-
+        MatrixGameSolution solution = new Solver(model).solve();
+        if (solution.getClass().equals(PureStrategyMatrixGameSolution.class)) {
+            switchState(SolverFormState.SOLVED_IN_PURE_STRATEGIES);
+            pureStrategiesAlphaField.setText(solution.getPlayerAStrategyView());
+            pureStrategiesBetaField.setText(solution.getPlayerBStrategyView());
+            pureStrategiesGammaField.setText(solution.getGameResultView());
+        } else if (solution.getClass().equals(MixedStrategyMatrixGameSolution.class)) {
+            switchState(SolverFormState.SOLVED_IN_MIXED_STRATEGIES);
+            mixedStrategiesPField.setText(solution.getPlayerAStrategyView());
+            mixedStrategiesQField.setText(solution.getPlayerBStrategyView());
+            mixedStrategiesGammaField.setText(solution.getGameResultView());
+        }
     }
 
     private void initializeMatrixTable() {
         initializeMatrixModel();
         resizeMatrixTable();
+        initializeMatrixView();
+    }
+
+    private void initializeMatrixView() {
+        matrixTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        firstColumnRenderer = new DefaultTableCellRenderer();
+        firstColumnRenderer.setBackground(UIManager.getColor("TableHeader.background"));
+        firstColumnRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        updateFirstColumnView();
+        matrixTable.setRowSelectionAllowed(false);
+    }
+
+    private void updateFirstColumnView() {
+        matrixTable.getColumnModel().getColumn(0).setMinWidth(110);
+        matrixTable.getColumnModel().getColumn(0).setMaxWidth(110);
+        matrixTable.getColumnModel().getColumn(0).setCellRenderer(firstColumnRenderer);
     }
 
     private void initializeMatrixModel() {
@@ -74,11 +105,9 @@ public class SolverForm extends JFrame {
                 return column != 0;
             }
         });
-        //TODO Set cell renderer for first column.
-        //matrixTable.getColumnModel().getColumn(0).setCellRenderer((table, value, isSelected, hasFocus, row, column) -> null);
+
         initializeMatrixTableListeners();
         initializeMatrixTableCellEditor();
-        matrixTable.setRowSelectionAllowed(false);
     }
 
     private void initializeMatrixTableCellEditor() {
@@ -86,7 +115,7 @@ public class SolverForm extends JFrame {
         ((AbstractDocument)field.getDocument()).setDocumentFilter(new DocumentFilter() {
             @Override
             public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                System.out.println("Replace happens!");
+                //System.out.println("Replace happens!");
                 if (isNumber(fb.getDocument().getText(0, offset) +
                         text +
                         fb.getDocument().getText(offset + length,
@@ -97,8 +126,11 @@ public class SolverForm extends JFrame {
 
             @Override
             public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
-                System.out.println("Insert happens!");
-                super.insertString(fb, offset, string, attr);
+                //System.out.println("Insert happens!");
+                if (isNumber(fb.getDocument().getText(0, offset) + string + fb.getDocument().getText(offset, fb.getDocument().getLength() - offset))) {
+                    super.insertString(fb, offset, string, attr);
+                }
+
             }
         });
         matrixTable.setCellEditor(new DefaultCellEditor(field));
@@ -158,13 +190,14 @@ public class SolverForm extends JFrame {
     private void resizeMatrixTable() {
         ((DefaultTableModel) matrixTable.getModel()).setColumnCount((Integer) spinnerB.getValue() + 1);
         ((DefaultTableModel) matrixTable.getModel()).setRowCount((Integer) spinnerA.getValue());
+        updateFirstColumnView();
         switchState(SolverFormState.DEFAULT);
     }
 
     private void validateMatrixTable() {
 
         if (isValidMatrix()) {
-            System.out.println("Valid matrix!");
+            //System.out.println("Valid matrix!");
             updateModel();
             switchState(SolverFormState.READY_TO_SOLVE);
         } else {
@@ -173,7 +206,6 @@ public class SolverForm extends JFrame {
     }
 
     private void updateModel() {
-        //TODO Update matrix model
         double[][] modelArray;
         modelArray = new double[matrixTable.getRowCount()][matrixTable.getColumnCount()-1];
         for (int rowIndex = 0; rowIndex < matrixTable.getRowCount(); rowIndex++) {
@@ -209,7 +241,10 @@ public class SolverForm extends JFrame {
             return false;
         if (str.equals(""))
             return false;
-        if ((str.toCharArray()[0] < '0' || str.toCharArray()[0] > '9') && str.toCharArray()[0] != '0')
+        /*if (str.matches("\\-?\\(\\d+|\\(\\d*[.,][\\d]+\\)\\)")) {
+            return true;
+        }*/
+        if ((str.toCharArray()[0] < '0' || str.toCharArray()[0] > '9') && str.toCharArray()[0] != '-')
             return false;
         for (int i = 1; i < str.toCharArray().length; i++) {
             if (str.toCharArray()[i] < '0' || str.toCharArray()[i] > '9')
