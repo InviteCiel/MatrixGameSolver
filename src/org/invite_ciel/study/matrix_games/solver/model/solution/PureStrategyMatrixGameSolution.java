@@ -15,12 +15,12 @@ public class PureStrategyMatrixGameSolution extends MatrixGameSolution {
 
     @Override
     public String getPlayerAStrategyView() {
-        return playerAPureStrategy + "";
+        return (playerAPureStrategy + 1) + "";
     }
 
     @Override
     public String getPlayerBStrategyView() {
-        return playerBPureStrategy + "";
+        return (playerBPureStrategy + 1) + "";
     }
 
     @Override
