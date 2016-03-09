@@ -42,7 +42,8 @@ public class Solver {
     MatrixGameSolution solveInPureStrategies() {
         double minimumGamePrice = minimumGamePrice();
         if (minimumGamePrice == maximumGamePrice()) {
-            return new PureStrategyMatrixGameSolution(minimumGamePrice, 1, 1);
+            return new PureStrategyMatrixGameSolution(minimumGamePrice,
+                    playerAPureStrategyCellIndex.getRow(), playerBPureStrategyCellIndex.getColumn());
         } else return null;
     }
 
