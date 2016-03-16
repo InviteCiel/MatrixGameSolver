@@ -19,4 +19,8 @@ public class CellIndex {
     public int getColumn() {
         return column;
     }
+
+    public String toString() {
+        return "(" + row + ", " + column + ")";
+    }
 }

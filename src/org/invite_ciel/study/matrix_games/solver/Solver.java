@@ -43,8 +43,16 @@ public class Solver {
         double minimumGamePrice = minimumGamePrice();
         if (minimumGamePrice == maximumGamePrice()) {
             return new PureStrategyMatrixGameSolution(minimumGamePrice,
-                    playerAPureStrategyCellIndex.getRow(), playerBPureStrategyCellIndex.getColumn());
+                    getEquivalentCells(minimumGamePrice));
         } else return null;
+    }
+
+    private List<CellIndex> getEquivalentCells(double value) {
+        return IntStream.range(0, model.getData().length).mapToObj(
+                rowIndex -> IntStream.range(0, model.getData()[0].length)
+                        .filter(columnIndex -> model.getEntry(rowIndex, columnIndex) == value)
+                        .mapToObj(columnIndex -> new CellIndex(rowIndex, columnIndex))
+        ).flatMap(cellIndexStream -> cellIndexStream).collect(Collectors.toList());
     }
 
     private MatrixGameSolution solveInMixedStrategies() {
@@ -74,9 +82,7 @@ public class Solver {
                         Arrays.stream(doubles).map(cellValue -> cellValue - minimumCellValue).toArray(),
                         constraintRelationship,
                         1))
-                .peek(lc -> System.out.println("LC: " + lc.getCoefficients()
-                        + lc.getRelationship()
-                        + lc.getValue())).collect(Collectors.toList());
+                .collect(Collectors.toList());
 
         LinearConstraintSet constraintSet = new LinearConstraintSet(constraintList);
         SimplexSolver solver = new SimplexSolver();
@@ -87,13 +93,13 @@ public class Solver {
     }
 
     private CellIndex getPlayerAPureStrategyCellIndex() {
-        return IntStream.range(0, model.getData().length).mapToObj(rawIndex ->
+        return IntStream.range(0, model.getData().length).mapToObj(rowIndex ->
                         new CellIndex(
-                                rawIndex,
+                                rowIndex,
                                 IntStream.range(0, model.getData()[0].length)
                                         .reduce((leftColumnCellIndex, rightColumnCellIndex) ->
-                                                (model.getData()[rawIndex][leftColumnCellIndex] <
-                                                        model.getData()[rawIndex][rightColumnCellIndex]) ?
+                                                (model.getData()[rowIndex][leftColumnCellIndex] <
+                                                        model.getData()[rowIndex][rightColumnCellIndex]) ?
                                                         leftColumnCellIndex : rightColumnCellIndex).getAsInt()
                         )
         ).max(new CellIndexComparator(model)).get();
