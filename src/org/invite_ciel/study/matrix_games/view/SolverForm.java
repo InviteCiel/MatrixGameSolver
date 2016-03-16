@@ -40,6 +40,7 @@ public class SolverForm extends JFrame {
     private JTextField mixedStrategiesPField;
     private JTextField mixedStrategiesQField;
     private JTextField mixedStrategiesGammaField;
+    private JTextField saddlePointsField;
     @SuppressWarnings("FieldCanBeLocal") //May be used to determine current state of SolverForm
     private SolverFormState state;
     private DefaultTableCellRenderer firstColumnRenderer;
@@ -69,6 +70,7 @@ public class SolverForm extends JFrame {
             pureStrategiesAlphaField.setText(solution.getPlayerAStrategyView());
             pureStrategiesBetaField.setText(solution.getPlayerBStrategyView());
             pureStrategiesGammaField.setText(solution.getGameResultView());
+            saddlePointsField.setText(((PureStrategyMatrixGameSolution)solution).getSaddlePointsView());
         } else if (solution.getClass().equals(MixedStrategyMatrixGameSolution.class)) {
             switchState(SolverFormState.SOLVED_IN_MIXED_STRATEGIES);
             mixedStrategiesPField.setText(solution.getPlayerAStrategyView());
