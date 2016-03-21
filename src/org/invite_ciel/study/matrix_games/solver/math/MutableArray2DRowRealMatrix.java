@@ -6,15 +6,20 @@ import org.apache.commons.math3.exception.NoDataException;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.apache.commons.math3.exception.NullArgumentException;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.invite_ciel.study.matrix_games.reduce.ReductionState;
+import org.invite_ciel.study.matrix_games.reduce.StrategyComparator;
 
 import java.lang.reflect.Field;
+import java.util.Comparator;
 
 /**
  * Created by InviteCiel on 28.02.16.
  */
 public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements MutableRealMatrix {
     private static final long serialVersionUID = 4231301860770686298L;
+
+    private ReductionState reductionState = isReducable()?ReductionState.REDUCABLE:ReductionState.NOT_REDUCABLE;
 
     private Field dataField;
 
@@ -54,6 +59,8 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
 
     @Override
     public void removeRow(int del_row) {
+        if (getRowDimension() <= 2)
+            throw new IllegalArgumentException("Minimum matrix size should be 2*2!");
         try {
             dataField.set(this, ArrayUtils.remove((double[][]) dataField.get(this), del_row));
         } catch (IllegalAccessException e) {
@@ -63,6 +70,8 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
 
     @Override
     public void removeColumn(int del_col) {
+        if (getColumnDimension() <= 2)
+            throw new IllegalArgumentException("Minimum matrix size should be 2*2!");
         try {
             double[][] data = (double[][])dataField.get(this);
             for (int i = 0; i < this.getRowDimension(); i++) {
@@ -71,6 +80,57 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public ReductionState getReductionState() {
+        return reductionState;
+    }
+
+    @Override
+    public MutableRealMatrix reduce() {
+        MutableArray2DRowRealMatrix result = new MutableArray2DRowRealMatrix(getData());
+        while (result.isReducable()) {
+            while (result.isReducableByRow()) {
+                result.removeRow(getFirstDominatedRow());
+            }
+            while (result.isReducableByColumn()) {
+                result.removeColumn(getFirstDominatedColumn());
+            }
+        }
+        result.reductionState = ReductionState.REDUCED;
+        return result;
+    }
+
+
+    private int getFirstDominatedRow() {
+        Comparator<RealVector> comparator = new StrategyComparator(true);
+        for (int firstRowIndex = 0; firstRowIndex < getRowDimension(); firstRowIndex++) {
+            for (int secondRowIndex = firstRowIndex + 1; secondRowIndex < getRowDimension(); secondRowIndex++) {
+                int compared = comparator.compare(getRowVector(firstRowIndex), getRowVector(secondRowIndex));
+                if (compared < 0) {
+                    return firstRowIndex;
+                } else if (compared > 0) {
+                    return secondRowIndex;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private int getFirstDominatedColumn() {
+        Comparator<RealVector> comparator = new StrategyComparator(false);
+        for (int firstColumnIndex = 0; firstColumnIndex < getColumnDimension(); firstColumnIndex++) {
+            for (int secondColumnIndex = firstColumnIndex + 1; secondColumnIndex < getColumnDimension(); secondColumnIndex++) {
+                int compared = comparator.compare(getColumnVector(firstColumnIndex), getColumnVector(secondColumnIndex));
+                if (compared < 0) {
+                    return firstColumnIndex;
+                } else if (compared > 0) {
+                    return secondColumnIndex;
+                }
+            }
+        }
+        return -1;
     }
 
     private void setData(double [][] data) {
@@ -100,4 +160,19 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
         return builder.toString();
     }
 
+    private boolean isReducable() {
+        return getRowDimension() > 2 &&
+                getColumnDimension() > 2 &&
+                (getFirstDominatedRow() != -1 || getFirstDominatedColumn() != -1);
+    }
+
+    private boolean isReducableByRow() {
+        return getRowDimension() > 2 &&
+                getFirstDominatedRow() != -1;
+    }
+
+    private boolean isReducableByColumn() {
+        return getColumnDimension() > 2 &&
+                getFirstDominatedColumn() != -1;
+    }
 }
