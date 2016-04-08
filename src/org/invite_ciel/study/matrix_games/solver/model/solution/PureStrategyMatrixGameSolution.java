@@ -1,27 +1,25 @@
 package org.invite_ciel.study.matrix_games.solver.model.solution;
 
-import org.invite_ciel.study.matrix_games.solver.model.utils.CellIndex;
+import org.invite_ciel.study.matrix_games.solver.model.utils.Cell;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by InviteCiel on 02.03.16.
  */
 public class PureStrategyMatrixGameSolution extends MatrixGameSolution {
-    private final List<CellIndex> saddlePoints;
+    private final List<Cell> saddlePoints;
 
     public PureStrategyMatrixGameSolution(double gamma, int playerAPureStrategy, int playerBPureStrategy) {
         super(gamma);
         saddlePoints = new LinkedList<>();
-        saddlePoints.add(new CellIndex(playerAPureStrategy, playerBPureStrategy));
+        saddlePoints.add(new Cell(playerAPureStrategy, playerBPureStrategy, gamma));
     }
 
-    public PureStrategyMatrixGameSolution(double gamma, List<CellIndex> saddlePoints) {
-        super(gamma);
+    public PureStrategyMatrixGameSolution(List<Cell> saddlePoints) {
+        super(saddlePoints.get(0).getValue());
         this.saddlePoints = saddlePoints;
     }
 
@@ -34,9 +32,9 @@ public class PureStrategyMatrixGameSolution extends MatrixGameSolution {
     }
 
     public String getSaddlePointsView() {
-        AtomicInteger index = new AtomicInteger(0);
-        return saddlePoints.stream().map(cellIndex -> new CellIndex(cellIndex.getRow() + 1, cellIndex.getColumn() + 1))
-                .map(CellIndex::toString).collect(Collectors.joining(", "));
+        return saddlePoints.stream().map(
+                cellIndex -> new Cell(cellIndex.getRow() + 1, cellIndex.getColumn() + 1, cellIndex.getValue()))
+                .map(Cell::toString).collect(Collectors.joining(", "));
     }
 
     @Override

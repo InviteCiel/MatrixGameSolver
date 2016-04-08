@@ -175,4 +175,9 @@ public class MutableArray2DRowRealMatrix extends Array2DRowRealMatrix implements
         return getColumnDimension() > 2 &&
                 getFirstDominatedColumn() != -1;
     }
+
+    @Override
+    public MutableRealMatrix transpose() {
+        return new MutableArray2DRowRealMatrix(super.transpose().getData());
+    }
 }
